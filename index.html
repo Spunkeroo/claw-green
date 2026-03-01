@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#2DC653">
 <meta name="description" content="Go green today with Claw.Green. Carbon footprint calculator, energy savings estimator, water usage tracker, eco tips, and sustainable living guides.">
-<meta name="keywords" content="carbon footprint calculator, eco living, sustainable shopping, energy savings, waste reduction, green travel, water usage tracker, carbon offset, eco score">
+<meta name="keywords" content="carbon footprint calculator, eco living, sustainable shopping, energy savings, waste reduction, green travel, water usage tracker, carbon offset, eco score, openclaw, claude ai, prompt engineering, vibe coding, chicago">
+<meta name="geo.region" content="US-IL">
+<meta name="geo.placename" content="Chicago">
+<meta name="ICBM" content="41.8781,-87.6298">
 <meta name="author" content="Spunkeroo Network">
 <meta name="robots" content="index, follow">
 <meta property="og:title" content="Claw.Green - Go Green Today | Carbon Calculator, Eco Tools & Sustainable Living">
@@ -947,20 +950,30 @@ async function updateVisitorCount() {
       body: JSON.stringify({ count: count + 1, lastVisit: new Date().toISOString() })
     });
   } catch(e) {
-    const fallback = Math.floor(Math.random() * 5000 + 1000);
-    document.getElementById("visitor-count").textContent = fallback.toLocaleString();
-    document.getElementById("visitor-total").textContent = fallback.toLocaleString();
+    document.getElementById("visitor-count").textContent = "0";
+    document.getElementById("visitor-total").textContent = "0";
   }
 }
 updateVisitorCount();
 
-// Live visitors (simulated)
-function updateLiveVisitors() {
-  const el = document.getElementById("live-visitors");
-  if (el) el.textContent = Math.floor(Math.random() * 50 + 5);
+// Live visitors (Firebase heartbeat-based)
+async function updateLiveVisitors() {
+  try {
+    const resp = await fetch(FIREBASE_DB + "/heartbeat/" + SITE_KEY + ".json");
+    const data = await resp.json();
+    if (data) {
+      const now = Date.now();
+      const active = Object.values(data).filter(ts => now - ts < 5 * 60 * 1000).length;
+      const el = document.getElementById("live-visitors");
+      if (el) el.textContent = Math.max(active, 1);
+    }
+  } catch(e) {
+    const el = document.getElementById("live-visitors");
+    if (el) el.textContent = "1";
+  }
 }
 updateLiveVisitors();
-setInterval(updateLiveVisitors, 10000);
+setInterval(updateLiveVisitors, 30000);
 
 // Calcs used counter
 async function updateCalcsCount() {
@@ -970,7 +983,7 @@ async function updateCalcsCount() {
     const count = (data && data.count) || 0;
     document.getElementById("calcs-used").textContent = count.toLocaleString();
   } catch(e) {
-    document.getElementById("calcs-used").textContent = Math.floor(Math.random() * 2000 + 500).toLocaleString();
+    document.getElementById("calcs-used").textContent = "0";
   }
 }
 updateCalcsCount();
@@ -1353,13 +1366,25 @@ function closeScrollCta() {
 }
 
 // ============================================================
-// Social Proof (simulated live visitors)
+// Social Proof (Firebase-based visitor count)
 // ============================================================
-function updateProofCount() {
-  document.getElementById("proof-count").textContent = Math.floor(Math.random() * 200 + 50);
+async function updateProofCount() {
+  try {
+    const resp = await fetch(FIREBASE_DB + "/heartbeat/" + SITE_KEY + ".json");
+    const data = await resp.json();
+    if (data) {
+      const now = Date.now();
+      const active = Object.values(data).filter(ts => now - ts < 15 * 60 * 1000).length;
+      document.getElementById("proof-count").textContent = Math.max(active, 1);
+    } else {
+      document.getElementById("proof-count").textContent = "1";
+    }
+  } catch(e) {
+    document.getElementById("proof-count").textContent = "1";
+  }
 }
 updateProofCount();
-setInterval(updateProofCount, 10000);
+setInterval(updateProofCount, 30000);
 
 // ============================================================
 // Cross-network click tracking (Firebase)
